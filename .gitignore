@@ -1,0 +1,21 @@
+# --- OS / editor cruft -------------------------------------------------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# --- Environment / secrets ----------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- Docker ---------------------------------------------------------------
+docker/*.env
+
+# Note: backend/ and frontend/ each have their own .gitignore for
+# language-specific build artifacts (Python bytecode/venvs, node_modules,
+# Next.js build output, generated experiment results, etc).

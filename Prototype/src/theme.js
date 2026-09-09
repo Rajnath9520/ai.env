@@ -1,0 +1,22 @@
+// Design tokens — dark research-lab theme
+export const C = {
+  bg: "#0a0e17",
+  sidebar: "#0b0f1a",
+  panel: "#111826",
+  panelAlt: "#0d1320",
+  border: "#1e2938",
+  borderLight: "#2b3a52",
+  text: "#e7ebf3",
+  textDim: "#8b96ab",
+  textFaint: "#525d76",
+  blue: "#4d90f5",
+  blueDim: "#17304f",
+  orange: "#f2994a",
+  orangeDim: "#3c2a17",
+  green: "#3fcf8e",
+  greenDim: "#173428",
+  red: "#f2555a",
+  redDim: "#3a1c1f",
+  yellow: "#e0c341",
+  purple: "#9a8cf5",
+};

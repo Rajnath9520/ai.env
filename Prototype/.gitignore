@@ -1,0 +1,33 @@
+# --- Dependencies ----------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# --- Next.js build output ---------------------------------------------------
+.next/
+out/
+build/
+dist/
+
+# --- Testing / coverage -----------------------------------------------------
+coverage/
+
+# --- TypeScript ---------------------------------------------------------
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Debug logs -----------------------------------------------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Vercel -------------------------------------------------------------
+.vercel
+
+# --- Local env overrides (kept out even though the root .gitignore also
+# covers .env*, restated here so this directory is self-contained) --------
+.env
+.env.local
+.env.*.local

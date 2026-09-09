@@ -1,0 +1,68 @@
+# --- Python bytecode / packaging ----------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Virtual environments -------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Test / lint / type-check caches --------------------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# --- Alembic (once migrations are introduced -- see docs/architecture.md's
+# "Known architectural limitations" -- versions themselves should still be
+# committed, only local scratch state should not be) -------------------
+# alembic/versions/*.pyc
+
+# --- Local database / logs -------------------------------------------------
+*.db
+*.sqlite3
+*.log
+
+# --- Generated experiment artifacts (Section 21/22) ------------------------
+# `ExperimentManager`/`ExperimentConfig.save()`/`ReproducibilityManifest.save()`
+# and the test suite all write real run output under experiments/ -- none of
+# it is source and all of it is reproducible from a config + seed, so none of
+# it belongs in version control. Curated, hand-written summaries
+# (results/research/FINDINGS.md, STATISTICAL_ANALYSIS.md,
+# results/ablation/FINDINGS.md) are the exception and stay tracked.
+experiments/configs/
+experiments/results/checkpoints/
+experiments/results/manifests/
+experiments/results/*.json
+experiments/results/research/*.json
+experiments/results/ablation/*.json
+!experiments/results/research/FINDINGS.md
+!experiments/results/research/STATISTICAL_ANALYSIS.md
+!experiments/results/ablation/FINDINGS.md
+
+# --- Model artifacts (Demo Agent -- PPO checkpoints, Section 4) -----------
+# Covered by experiments/results/checkpoints/ above; anything else ending in
+# .zip in this backend is also a generated SB3 checkpoint, never source.
+*.zip

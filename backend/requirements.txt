@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+sqlalchemy>=2
+alembic
+psycopg2-binary
+gymnasium
+stable-baselines3
+torch
+numpy
+scikit-learn
+scipy
+pyyaml
+pytest
+pytest-asyncio
+httpx
