@@ -1,22 +1,4 @@
-"""Phase 28 (Section 9/10/11/12) -- the external-agent interactive loop.
 
-This is where Mode B ("External Agent", Section 3) actually lives. ai.env
-owns the environment, trajectory collection, failure analysis, weakness
-extraction, and adaptive environment generation; the external agent (a
-separate process, owning its own model) drives it purely through
-reset()/step() calls made over HTTP (see external_adapter.py's documented
-contract).
-
-Nothing in this module imports stable_baselines3 or AgentTrainer -- there
-is no legitimate PPO execution path here (Section 26/30): an external
-agent never causes ai.env to instantiate a model of its own.
-
-State is held in-process, per experiment_id, the same documented pattern
-already used for cancellation flags (app/services/experiment_service.py)
-and the WebSocket broadcaster (app/workers/broadcaster.py) -- a real
-multi-worker deployment would need a shared store instead; that limitation
-is inherited, not new.
-"""
 
 from __future__ import annotations
 

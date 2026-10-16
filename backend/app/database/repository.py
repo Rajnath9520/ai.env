@@ -1,17 +1,4 @@
-"""Bridges Phase 15's `ExperimentResult` (in-memory / JSON) to the Phase 16
-database schema. This is the concrete answer to Section 23's "store
-experiment metadata" -- not just table definitions nobody writes to.
 
-Episode/Failure granularity: `CurriculumStep` records one evaluation
-per curriculum step (aggregated over several episodes), not individual raw
-episodes. For failure_driven experiments, this module stores exactly one
-representative `Episode` row per curriculum step (reward/steps/success from
-that step's evaluation) with its real `Failure` rows attached (from
-`failure_reports_history`, which are genuine per-episode failure-analyzer
-outputs, aggregated across the trajectories sampled for that step) --
-`collisions` on that row is left at 0 since a precise collision *count* was
-never retained at this granularity, rather than fabricating one.
-"""
 
 from __future__ import annotations
 

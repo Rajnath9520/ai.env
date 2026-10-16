@@ -20,9 +20,6 @@ COPY backend/app ./app
 COPY backend/scripts ./scripts
 COPY backend/pytest.ini ./pytest.ini
 
-# Not copying backend/tests/ or backend/experiments/ into the runtime
-# image -- tests run in CI/dev against the source tree, not the built
-# image, and experiment result JSON is generated at runtime, not baked in.
 
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8000

@@ -12,11 +12,15 @@ import {
   BarChart3,
   Scale,
   Sparkles,
+  FolderGit2,
+  Server,
 } from "lucide-react";
 
 function navItems(experimentId?: number) {
   return [
     { href: "/dashboard", label: "Lab Overview", icon: LayoutGrid },
+    { href: "/projects", label: "Projects", icon: FolderGit2 },
+    { href: "/agents", label: "Agents", icon: Server },
     { href: "/experiments/new", label: "New Experiment", icon: FlaskConical },
     { href: experimentId ? `/live-training/${experimentId}` : "/dashboard", label: "Live", icon: Radio },
     { href: experimentId ? `/environments/${experimentId}` : "/dashboard", label: "Environments", icon: Boxes },
@@ -43,9 +47,9 @@ export function Sidebar({ experimentId }: { experimentId?: number }) {
     <aside className="w-56 shrink-0 bg-[#0b1120] border-r border-app-border flex flex-col h-screen sticky top-0">
       <div className="px-5 py-5 border-b border-app-border">
         <Link href="/dashboard" className="flex items-center gap-2">
-          {/* <div className="w-7 h-7 rounded bg-app-blue/15 border border-app-blue/40 flex items-center justify-center">
+          <div className="w-7 h-7 rounded bg-app-blue/15 border border-app-blue/40 flex items-center justify-center">
             <Sparkles size={14} className="text-app-blue" />
-          </div> */}
+          </div>
           <div>
             <div className="text-xs font-bold tracking-widest text-app-hi">AI LAB</div>
             <div className="text-[10px] text-app-low tracking-wide">ENVIRONMENT LAB</div>

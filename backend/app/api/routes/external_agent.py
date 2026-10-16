@@ -1,10 +1,4 @@
-"""Phase 28 (Section 9) -- external-agent HTTP routes.
 
-Thin controllers only, matching the rest of the API layer's convention
-(Section 24): validate via Pydantic, delegate to
-`app.ml.agents.external_session`, translate results/errors to HTTP. No ML
-logic and no direct model/PPO code lives here.
-"""
 
 from __future__ import annotations
 

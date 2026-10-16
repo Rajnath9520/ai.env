@@ -1,8 +1,4 @@
-"""Phase 17 -- experiment API routes (Section 24). Thin controllers only:
-validate via Pydantic, delegate to ExperimentService, translate results/
-errors to HTTP. No ML logic, no direct ORM queries beyond simple read
-endpoints that don't warrant a dedicated service method.
-"""
+
 
 from __future__ import annotations
 

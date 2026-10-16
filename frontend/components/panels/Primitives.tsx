@@ -95,3 +95,66 @@ export function AgentModeBadge({ agentMode }: { agentMode: string }) {
     </span>
   );
 }
+
+// Mode B -- project status / capability badges (docs/projects-and-adapters.md).
+const PROJECT_STATUS_COLORS: Record<string, string> = {
+  draft: "#8b96ab",
+  scanned: "#3f8cff",
+  configured: "#3f8cff",
+  validated: "#22c55e",
+  validation_failed: "#ef4444",
+};
+
+export function ProjectStatusBadge({ status }: { status: string }) {
+  const color = PROJECT_STATUS_COLORS[status] ?? "#8b96ab";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color }}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {status.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+export function CapabilityBadge({ capability }: { capability: string }) {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide text-app-mid bg-app-panel2 border border-app-border">
+      {capability.replace(/_/g, " ").toUpperCase()}
+    </span>
+  );
+}
+
+const RUN_STATUS_COLORS: Record<string, string> = {
+  queued: "#8b96ab",
+  running_training: "#3f8cff",
+  running_evaluation: "#3f8cff",
+  completed: "#22c55e",
+  failed: "#ef4444",
+  cancelled: "#f97a2c",
+};
+
+export function RunStatusBadge({ status }: { status: string }) {
+  const color = RUN_STATUS_COLORS[status] ?? "#8b96ab";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color }}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {status.replace(/_/g, " ")}
+    </span>
+  );
+}
+
+const AGENT_STATUS_COLORS: Record<string, string> = {
+  connected: "#22c55e",
+  unreachable: "#ef4444",
+  unauthorized: "#f97a2c",
+  unknown: "#8b96ab",
+};
+
+export function AgentStatusBadge({ status }: { status: string }) {
+  const color = AGENT_STATUS_COLORS[status] ?? "#8b96ab";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color }}>
+      <span className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
+      {status}
+    </span>
+  );
+}

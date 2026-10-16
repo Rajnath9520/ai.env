@@ -44,10 +44,144 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
 
+class Agent(Base):
+    """Section 5 -- a registered Local Agent: a separate process
+    (`agent_app/main.py`, typically on the user's own machine) that ai.env
+    talks to over HTTP instead of touching that filesystem or running
+    commands itself. `token` is the shared bearer secret that agent was
+    started with (`AI_ENV_AGENT_TOKEN`). It has to be stored recoverably,
+    since the backend must present it on every call -- so it sits in the
+    database in plaintext, protected only by whatever protects that
+    database, and is never returned by any API schema (`has_token` is all
+    the API exposes). `status` reflects the last check
+    (`POST /api/agents/{id}/ping`), not a live connection: `connected`,
+    `unreachable`, or `unauthorized` (reachable, but the token is missing
+    or wrong)."""
+
+    __tablename__ = "agents"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    base_url: Mapped[str] = mapped_column(String(500))
+    token: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # connected | unreachable | unauthorized | unknown
+    status: Mapped[str] = mapped_column(String(20), default="unknown")
+    last_seen_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    projects: Mapped[list["Project"]] = relationship(back_populates="agent")
+
+    @property
+    def has_token(self) -> bool:
+        return bool(self.token)
+
+
+class Project(Base):
+    """Mode B (master prompt Section 4/7/8) -- a registered, user-owned AI
+    project. Deliberately separate from `Experiment`: a `Project` is a
+    durable pointer at *the user's own code* (their `root_path`, scanned
+    and reconfirmed over time), while an `Experiment` is one ai.env-owned
+    run of it. GridWorld/PPO experiments have no `Project` row at all
+    (`experiments.project_id` stays NULL) -- they are the "built-in"
+    source per Section 46's project-card example, not a registered one.
+
+    `detected_config` is the last raw `ProjectScanner` result (Section 7) --
+    always suggestions, never trusted directly. `config_yaml` is only
+    populated once the user has confirmed/edited that suggestion into a
+    complete `AIEnvConfig` (Section 8); routes must never let
+    `detected_config` substitute for it.
+    """
+
+    __tablename__ = "projects"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    root_path: Mapped[str] = mapped_column(String(1000))
+    # "local" (Local Agent-scanned path) | "upload" (Section 4's ZIP
+    # alternative) | "built_in" (reserved; GridWorld itself has no row).
+    source: Mapped[str] = mapped_column(String(20), default="local")
+    # NULL -- executed directly by the backend process (Section 61's
+    # "Initial implementation: LOCAL execution", i.e. project and backend
+    # share a filesystem). Set -- every scan/validate/train/evaluate for
+    # this project is instead proxied to that registered Agent over HTTP
+    # (`app/services/agent_client.py`), which is what actually lets
+    # `root_path` refer to a path on a *different* machine than the
+    # backend (Section 5).
+    agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id", ondelete="SET NULL"), nullable=True)
+    language: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    framework: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    task: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    # draft -> scanned -> configured -> validated | validation_failed
+    status: Mapped[str] = mapped_column(String(30), default="draft")
+    capabilities: Mapped[list] = mapped_column(JSONB, default=list)
+    detected_config: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    config_yaml: Mapped[str | None] = mapped_column(Text, nullable=True)
+    validation_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+    experiments: Mapped[list["Experiment"]] = relationship(back_populates="project")
+    runs: Mapped[list["ProjectRun"]] = relationship(
+        back_populates="project", cascade="all, delete-orphan", order_by="ProjectRun.run_number"
+    )
+    agent: Mapped["Agent | None"] = relationship(back_populates="projects")
+
+
+class ProjectRun(Base):
+    """Mode B -- one train(+evaluate) cycle for a `Project`, executed by
+    `ProjectService`'s background worker via `CommandAdapter` (Section 19/
+    Rule 11: never inline in the request). Deliberately its own table
+    rather than reusing `TrainingRun`/`Evaluation` -- those are shaped
+    around GridWorld/PPO specifically (hardcoded `success_rate`,
+    `average_reward`, etc., which Section 23 explicitly says not to
+    impose on every task), so treating them as "equivalent existing
+    models" (Section 16) would mean forcing irrelevant columns onto a
+    face-recognition or object-detection run. `train_result`/
+    `evaluation_result` instead store `TrainResult.to_dict()`/
+    `EvaluationResult.to_dict()` directly -- arbitrary per-task metrics
+    live in `evaluation_result["metrics"]` as JSONB (Section 23/58).
+
+    `run_number` is per-project and starts at 1 (Section 18: "Never
+    silently overwrite previous versions"); `managed_artifact_path` is the
+    ai.env-archived copy from `archive_run_artifact`, distinct from
+    `train_result["artifact"]["path"]`, which is the live path in the
+    user's own project that the *next* run's script may overwrite.
+    """
+
+    __tablename__ = "project_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    run_number: Mapped[int]
+    # queued -> running_training -> running_evaluation -> completed | failed | cancelled
+    status: Mapped[str] = mapped_column(String(30), default="queued")
+    started_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    ended_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    # Set only when this run executed via a registered Agent (Section 5)
+    # rather than directly by the backend -- the id *that agent* uses for
+    # this run, needed to poll/cancel/download from it. Meaningless
+    # without also knowing `project.agent_id`, which is why this lives on
+    # the run (agents can change) rather than being assumed globally.
+    agent_run_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    train_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    evaluation_result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    managed_artifact_path: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    project: Mapped["Project"] = relationship(back_populates="runs")
+
+
 class Experiment(Base):
     __tablename__ = "experiments"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    # Mode B -- NULL for every built-in GridWorld/PPO experiment (all of
+    # them, until a future phase lets those be registered as a Project
+    # too). Never required, never backfilled: existing rows are valid as
+    # NULL and stay that way.
+    project_id: Mapped[int | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), nullable=True
+    )
     name: Mapped[str] = mapped_column(String(255))
     config_yaml: Mapped[str] = mapped_column(Text)
     curriculum_type: Mapped[str] = mapped_column(String(50))
@@ -63,6 +197,7 @@ class Experiment(Base):
     status: Mapped[str] = mapped_column(String(32), default="pending")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
+    project: Mapped["Project | None"] = relationship(back_populates="experiments")
     environments: Mapped[list["Environment"]] = relationship(
         back_populates="experiment", cascade="all, delete-orphan"
     )

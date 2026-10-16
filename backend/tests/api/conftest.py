@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 from app.database.session import drop_db, engine, init_db
 from app.main import app
 
+TEST_API_TOKEN = "test-api-token-xyz789"
+
 
 @pytest.fixture(scope="module", autouse=True)
 def _setup_schema():
@@ -13,9 +15,19 @@ def _setup_schema():
     drop_db(engine)
 
 
+@pytest.fixture(autouse=True)
+def _api_token(monkeypatch):
+    # Every test in this package exercises the *normal, authenticated*
+    # path -- auth itself (missing/wrong token, fail-closed, opt-out) is
+    # tested in isolation in tests/api/test_api_auth.py against a client
+    # that deliberately doesn't send this header.
+    monkeypatch.setenv("AI_ENV_API_TOKEN", TEST_API_TOKEN)
+    monkeypatch.delenv("AI_ENV_API_ALLOW_NO_AUTH", raising=False)
+
+
 @pytest.fixture
 def client():
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": f"Bearer {TEST_API_TOKEN}"})
 
 
 TINY_PAYLOAD = dict(

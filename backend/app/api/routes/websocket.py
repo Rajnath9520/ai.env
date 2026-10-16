@@ -1,13 +1,4 @@
-"""Phase 18 -- WebSocket streaming route (Section 25).
 
-`/ws/experiments/{id}` streams summarized training ticks as JSON, matching
-Section 25's example fields: episode, reward, success_rate,
-environment_id, primary_weakness, learning_progress, training_status.
-
-Reads from the experiment's broadcaster queue via `asyncio.to_thread` so
-the blocking `queue.get()` doesn't block the event loop, and exits cleanly
-on client disconnect or once the broadcaster signals the run has ended.
-"""
 
 from __future__ import annotations
 
